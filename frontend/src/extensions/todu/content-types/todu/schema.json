@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "todus",
+  "info": {
+    "singularName": "todu",
+    "pluralName": "todus",
+    "displayName": "todu",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    },
+    "content-type-builder": {
+      "visible": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLentgh": 40
+    },
+    "isDone": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

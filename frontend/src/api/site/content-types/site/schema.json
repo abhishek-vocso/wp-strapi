@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "Site",
+  "info": {
+    "singularName": "site",
+    "pluralName": "sites",
+    "displayName": "Site",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "wordpressWebsiteUrl": {
+      "type": "string"
+    },
+    "post": {
+      "type": "json"
+    },
+    "app": {
+      "type": "json"
+    },
+    "page": {
+      "type": "json"
+    },
+    "attachment": {
+      "type": "json"
+    },
+    "agency": {
+      "type": "json"
+    },
+    "services": {
+      "type": "json"
+    },
+    "postData": {
+      "type": "json"
+    },
+    "pageData": {
+      "type": "json"
+    },
+    "appData": {
+      "type": "json"
+    },
+    "pricingFilterData": {
+      "type": "json"
+    },
+    "cfCategoryData": {
+      "type": "json"
+    },
+    "demo1Data": {
+      "type": "json"
+    },
+    "postMedia": {
+      "type": "json"
+    }
+  }
+}
