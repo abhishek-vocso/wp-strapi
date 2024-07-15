@@ -3,48 +3,64 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 
-async function downloadImage(url, destinationDirectory) {
-  const fetch = (await import('node-fetch')).default;
+const app = express();
+app.use(cors()); // Enable CORS
+app.use(express.json());
 
+const PORT = 3000;
+
+async function downloadImage(url, id, sizes, mimeType, destinationDirectory) {
   const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(`HTTP error! Status: ${response.status}`);
   }
 
-  const buffer = await response.buffer();
-  const uniqueFilename = generateUniqueFilename();
-  const destinationPath = path.join(destinationDirectory, uniqueFilename);
+  const buffer = await response.arrayBuffer();
+
+  // Determine the size name from sizes object
+  let sizeName = 'full'; // Default to 'full' if sizes object is undefined
+  if (sizes && sizes.thumbnail) {
+    sizeName = 'thumbnail';
+  } else if (sizes && sizes.medium) {
+    sizeName = 'medium';
+  } else if (sizes && sizes.medium_large) {
+    sizeName = 'medium_large';
+  } else if (sizes && sizes['post-thumbnail']) {
+    sizeName = 'post-thumbnail';
+  } else if (sizes && sizes['twentyfourteen-full-width']) {
+    sizeName = 'twentyfourteen-full-width';
+  }
+
+  const filename = `${id}.${sizeName}.${mimeType.split('/')[1]}`; // Generate filename
+
+  const destinationPath = path.join(destinationDirectory, filename);
 
   // Ensure the destination directory exists, creating it if necessary
   await fs.mkdir(destinationDirectory, { recursive: true });
 
-  await fs.writeFile(destinationPath, buffer);
+  await fs.writeFile(destinationPath, Buffer.from(buffer));
   console.log(`Image downloaded to: ${destinationPath}`);
 
-  return uniqueFilename; // Return the unique filename
+  return filename; // Return the filename
 }
 
-function generateUniqueFilename() {
-  // Generate a unique filename using a random number or UUID, for example
-  const randomString = Math.random().toString(36).substring(7); // Generate a random string
-  return `${randomString}.jpg`; // Return a unique filename
-}
 
-const app = express();
-app.use(cors()); // Enable CORS
-app.use(express.json());
 
 app.post('/proxy', async (req, res) => {
   try {
-    const { imageUrls } = req.body;
+    const { imageDetails } = req.body;
 
-    if (!imageUrls || !Array.isArray(imageUrls)) {
-      return res.status(400).json({ error: "Invalid image URLs" });
+    if (!imageDetails || !Array.isArray(imageDetails)) {
+      return res.status(400).json({ error: "Invalid image details" });
     }
 
-    const destinationDirectory = path.join(__dirname, '/public/uploads');
-    const downloadPromises = imageUrls.map(url => downloadImage(url, destinationDirectory));
+    const destinationDirectory = path.join(__dirname, 'public', 'uploads');
+
+    const downloadPromises = imageDetails.map(({ url, id, sizes, mimeType }) =>
+      downloadImage(url, id, sizes, mimeType, destinationDirectory)
+    );
+
     const filenames = await Promise.all(downloadPromises);
 
     res.status(200).json({ filenames });
@@ -54,6 +70,6 @@ app.post('/proxy', async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('Proxy server listening on port 3000');
+app.listen(PORT, () => {
+  console.log(`Proxy server listening on port ${PORT}`);
 });

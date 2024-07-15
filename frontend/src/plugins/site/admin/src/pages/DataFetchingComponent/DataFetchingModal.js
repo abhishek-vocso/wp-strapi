@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import {
   ModalLayout,
@@ -18,10 +17,9 @@ const DataModal = ({ setShowModal }) => {
   const [postMedia, setPostMedia] = useState(null);
   const siteId = useParams().id;
   const [selectedContentType, setSelectedContentType] = useState("postData");
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
-    console.log(`Fetching data for site ID: ${siteId}`);
-
     async function fetchData() {
       try {
         const responses = await Promise.all([
@@ -112,29 +110,29 @@ const DataModal = ({ setShowModal }) => {
         throw new Error("No postMedia available to download");
       }
 
-      const imageUrls = postMedia.map(mediaItem => mediaItem.source_url);
+      setMessage('Processing...');
 
-      const response = await axios.post('http://localhost:3000/proxy', { imageUrls });
+      const imageDetails = postMedia.map(mediaItem => ({
+        url: mediaItem.source_url,
+        id: mediaItem.id,
+        sizes: mediaItem.media_details.sizes,
+        mimeType: mediaItem.mime_type
+      }));
+
+      const response = await axios.post('http://localhost:3000/proxy', { imageDetails });
 
       if (response.status !== 200) {
         throw new Error('Failed to fetch images from server');
       }
 
-      response.data.forEach(image => {
-        const blob = new Blob([image.data], { type: image.contentType });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = image.url.split('/').pop();
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      });
+      const { filenames } = response.data;
+      console.log("Downloaded images:", filenames);
 
-      console.log("Images downloaded successfully");
+      setMessage('Download success');
+
     } catch (error) {
       console.error("Error downloading images:", error);
+      setMessage('Error downloading images');
     }
   };
 
@@ -209,9 +207,12 @@ const DataModal = ({ setShowModal }) => {
               Send Data
             </Button>
             {selectedContentType === "postMedia" && (
-              <Button onClick={downloadImages} variant="secondary">
-                Download Images
-              </Button>
+              <div>
+                <Button onClick={downloadImages} variant="secondary">
+                  Download Images
+                </Button>
+                {message && <p>{message}</p>}
+              </div>
             )}
           </>
         }
